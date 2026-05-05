@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  orchestrator:
+    build: ./src/Orchestrator
+    ports:
+      - "5000:8080"
+    env_file: .env
+    depends_on:
+      - researchsummarizer
+      - reporter
+      - notifier
+
+  researchsummarizer:
+    build: ./src/ResearchSummarizer
+    ports:
+      - "5001:8080"
+    env_file: .env
+
+  reporter:
+    build: ./src/Reporter
+    ports:
+      - "5002:8080"
+    env_file: .env
+
+  notifier:
+    build: ./src/Notifier
+    ports:
+      - "5003:8080"
+    env_file: .env
