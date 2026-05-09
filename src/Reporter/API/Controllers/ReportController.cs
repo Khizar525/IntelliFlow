@@ -23,7 +23,7 @@ public class ReportController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateReport([FromBody] ReportRequest request)
     {
-        var result = await _reporter.GenerateAndStoreAsync(request);
+       var result = await _reporter.GenerateReportAsync(request.TaskId, request.Topic, request.Summary);
         return Ok(result);
     }
 
