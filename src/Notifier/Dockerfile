@@ -4,10 +4,10 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["Notifier.API/Notifier.API.csproj", "Notifier.API/"]
-RUN dotnet restore "Notifier.API/Notifier.API.csproj"
+COPY ["API/Notifier.API.csproj", "API/"]
+RUN dotnet restore "API/Notifier.API.csproj"
 COPY . .
-WORKDIR "/src/Notifier.API"
+WORKDIR "/src/API"
 RUN dotnet build "Notifier.API.csproj" -c Release -o /app/build
 
 FROM build AS publish
