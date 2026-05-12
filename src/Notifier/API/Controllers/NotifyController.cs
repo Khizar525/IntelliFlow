@@ -1,48 +1,48 @@
-// ============================================================
-// Module 4: Notifier Agent — Email + Blockchain
-// Owner: Shamraiz (02-131232-112)
-// ============================================================
 using Microsoft.AspNetCore.Mvc;
+using Notifier.API.Services;
+
+namespace Notifier.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/notify")]
 public class NotifyController : ControllerBase
 {
-    private readonly EmailService      _email;
-    private readonly BlockchainService _blockchain;
+    private readonly EmailService _emailService;
+    private readonly BlockchainService _blockchainService;
 
-    public NotifyController(EmailService email, BlockchainService blockchain)
+    public NotifyController(EmailService emailService, BlockchainService blockchainService)
     {
-        _email      = email;
-        _blockchain = blockchain;
+        _emailService = emailService;
+        _blockchainService = blockchainService;
     }
 
-    /// <summary>
-    /// POST /api/notify
-    /// Sends email to user AND writes hash to Sepolia blockchain.
-    /// Returns: { "txHash": "0x..." }
-    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Notify([FromBody] NotifyRequest request)
     {
-        // Run email and blockchain in parallel for efficiency
-        var emailTask      = _email.SendReportEmailAsync(request.Email, request.ReportUrl, request.TaskId);
-        var blockchainTask = _blockchain.LogTaskHashAsync(request.TaskId, request.OutputHash);
+        // 1. Send email
+        await _emailService.SendReportEmailAsync(
+            request.Email, 
+            request.TaskId, 
+            request.ReportUrl
+        );
 
-        await Task.WhenAll(emailTask, blockchainTask);
+        // 2. Log to blockchain
+        var txHash = await _blockchainService.LogTaskHashAsync(
+            request.TaskId, 
+            request.OutputHash
+        );
 
-        var txHash = await blockchainTask;
         return Ok(new { txHash });
     }
 
     [HttpGet("health")]
-    public IActionResult Health() => Ok(new { status = "Notifier OK" });
+    public IActionResult Health() => Ok("Notifier is running");
 }
 
 public class NotifyRequest
 {
-    public string TaskId     { get; set; } = string.Empty;
-    public string Email      { get; set; } = string.Empty;
-    public string ReportUrl  { get; set; } = string.Empty;
-    public string OutputHash { get; set; } = string.Empty;
+    public string TaskId { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string ReportUrl { get; set; } = "";
+    public string OutputHash { get; set; } = "";
 }
