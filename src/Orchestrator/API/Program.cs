@@ -5,6 +5,23 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using DotNetEnv;
+
+// Explicitly specify the path to the .env file
+Env.Load("D:\\cloud_project\\IntelliFlow\\.env");
+
+// Debug statement to verify JWT_SECRET
+Console.WriteLine($"JWT_SECRET: {Environment.GetEnvironmentVariable("JWT_SECRET")}");
+
+// Load environment variables from .env file
+Env.Load();
+
+// Access JWT_SECRET
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+if (string.IsNullOrEmpty(jwtSecret))
+{
+    throw new Exception("JWT_SECRET env var not set");
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +30,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // JWT Authentication
-var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET")
-    ?? throw new Exception("JWT_SECRET env var not set");
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
