@@ -23,7 +23,7 @@ public class SummarizerService
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException("OPENROUTER_API_KEY not set");
 
-        var model = _config["OPENROUTER_MODEL"] ?? "inclusionai/ring-2.6-1t:free";
+        var model = _config["OPENROUTER_MODEL"] ?? "google/gemma-4-26b-a4b-it:free";
 
         var requestBody = new
         {
