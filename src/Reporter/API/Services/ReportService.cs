@@ -27,8 +27,9 @@ public class ReportService
         // Step 3 - Supabase Upload
         var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL")
             ?? throw new Exception("SUPABASE_URL not set");
-        var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY")
-            ?? throw new Exception("SUPABASE_ANON_KEY not set");
+        var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_ROLE_KEY")
+            ?? Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY")
+            ?? throw new Exception("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY not set");
 
         var client = new Supabase.Client(supabaseUrl, supabaseKey);
         await client.InitializeAsync();

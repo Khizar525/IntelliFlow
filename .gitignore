@@ -18,6 +18,15 @@ docker-compose.override.yml
 # Node (for any tooling)
 node_modules/
 
+# Frontend
+frontend/dist/
+
+# Logs
+*.log
+
+# Tooling
+opencode.jsonc
+
 # OS
 .DS_Store
 Thumbs.db

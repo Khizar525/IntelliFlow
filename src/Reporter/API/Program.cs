@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 // Module 3 — Owner: Hassan Asif
 // Load .env file
-var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+var envFile = Path.Combine(Directory.GetCurrentDirectory(), "../../../.env");
 if (File.Exists(envFile))
 {
     foreach (var line in File.ReadAllLines(envFile))

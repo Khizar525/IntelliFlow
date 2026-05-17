@@ -1,8 +1,15 @@
+Console.WriteLine($"DEBUG CWD: {Directory.GetCurrentDirectory()}");
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Load .env file manually if present (for local dev)
-var envFile = Path.Combine(Directory.GetCurrentDirectory(), "../../../.env");
-if (File.Exists(envFile))
+// Load .env file — try CWD first, then project-relative paths
+var candidates = new[] { ".env", "../../../.env", "../../../../.env" }
+    .Select(p => Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), p)))
+    .ToArray();
+Console.WriteLine($"DEBUG .env candidates: {string.Join(", ", candidates)}");
+var envFile = candidates.FirstOrDefault(File.Exists);
+Console.WriteLine($"DEBUG .env found: {envFile ?? "NULL"}");
+if (envFile != null)
 {
     foreach (var line in File.ReadAllLines(envFile))
     {
@@ -12,6 +19,7 @@ if (File.Exists(envFile))
             Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
     }
 }
+Console.WriteLine($"DEBUG OPENROUTER_API_KEY after load: {(Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") ?? "NULL")}");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
