@@ -20,6 +20,7 @@ node_modules/
 
 # Frontend
 frontend/dist/
+frontend/.vite/
 
 # Logs
 *.log
