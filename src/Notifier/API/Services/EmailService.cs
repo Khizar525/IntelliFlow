@@ -1,58 +1,40 @@
-// ============================================================
-// Module 4: Email Service — SMTP notification
-// Owner: Shamraiz (02-131232-112)
-//
-// NuGet: dotnet add package MailKit
-// ============================================================
 using MailKit.Net.Smtp;
 using MimeKit;
 
+namespace Notifier.API.Services;
+
 public class EmailService
 {
-    private readonly string _host;
-    private readonly int    _port;
-    private readonly string _user;
-    private readonly string _password;
-    private readonly string _from;
+    private readonly string _smtpUser;
+    private readonly string _smtpPassword;
 
     public EmailService()
     {
-        _host     = Environment.GetEnvironmentVariable("SMTP_HOST")     ?? "smtp.gmail.com";
-        _port     = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? "587");
-        _user     = Environment.GetEnvironmentVariable("SMTP_USER")     ?? throw new Exception("SMTP_USER not set");
-        _password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? throw new Exception("SMTP_PASSWORD not set");
-        _from     = Environment.GetEnvironmentVariable("SMTP_FROM")     ?? _user;
+        _smtpUser = Environment.GetEnvironmentVariable("SMTP_USER")!;
+        _smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD")!;
     }
 
-    public async Task SendReportEmailAsync(string toEmail, string reportUrl, string taskId)
+    public async Task SendReportEmailAsync(string toEmail, string taskId, string reportUrl)
     {
         var message = new MimeMessage();
-        message.From.Add(MailboxAddress.Parse(_from));
+        message.From.Add(MailboxAddress.Parse(_smtpUser));
         message.To.Add(MailboxAddress.Parse(toEmail));
-        message.Subject = $"[IntelliFlow] Your report is ready — Task {taskId[..8]}";
+        message.Subject = $"IntelliFlow Report Ready — Task {taskId}";
 
-        message.Body = new TextPart("plain")
+        message.Body = new TextPart("html")
         {
-            Text = $"""
-                    Hello,
-
-                    Your IntelliFlow research report has been generated successfully.
-
-                    Task ID   : {taskId}
-                    Report URL: {reportUrl}
-
-                    The report is available for download at the link above.
-                    A blockchain audit record has also been created for this output.
-
-                    — IntelliFlow Automated System
-                    Bahria University Karachi | Cloud Computing Lab
-                    """
+            Text = $@"
+                <h2>Your IntelliFlow Report is Ready</h2>
+                <p>Task ID: <strong>{taskId}</strong></p>
+                <p><a href='{reportUrl}'>Click here to download your report</a></p>
+                <br/>
+                <p>— IntelliFlow System</p>"
         };
 
-        using var smtp = new SmtpClient();
-        await smtp.ConnectAsync(_host, _port, MailKit.Security.SecureSocketOptions.StartTls);
-        await smtp.AuthenticateAsync(_user, _password);
-        await smtp.SendAsync(message);
-        await smtp.DisconnectAsync(quit: true);
+        using var client = new SmtpClient();
+        await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+        await client.AuthenticateAsync(_smtpUser, _smtpPassword);
+        await client.SendAsync(message);
+        await client.DisconnectAsync(true);
     }
 }

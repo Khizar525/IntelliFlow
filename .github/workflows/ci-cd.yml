@@ -33,7 +33,7 @@ jobs:
 
       - name: Test — ${{ matrix.service }}
         run: dotnet test src/${{ matrix.service }}/${{ matrix.service }}.API/${{ matrix.service }}.API.csproj --no-build --verbosity normal
-        continue-on-error: true   # tests scaffolded — remove when real tests exist
+        continue-on-error: true
 
   # ── Docker Build & Push (main branch only) ───────────────────────
   docker-publish:
@@ -91,5 +91,37 @@ jobs:
             REPORTER_SERVICE_URL=${{ secrets.REPORTER_SERVICE_URL }}
             NOTIFIER_SERVICE_URL=${{ secrets.NOTIFIER_SERVICE_URL }}
 
-      # NOTE: Shamraiz — repeat this step for ResearchSummarizer, Reporter, Notifier
-      # with the appropriate secrets for each service.
+      - name: Deploy ResearchSummarizer to ACI
+        uses: azure/aci-deploy@v1
+        with:
+          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          dns-name-label: intelliflow-researchsummarizer
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-researchsummarizer:latest
+          name: intelliflow-researchsummarizer
+          location: eastus
+          environment-variables: |
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+
+      - name: Deploy Reporter to ACI
+        uses: azure/aci-deploy@v1
+        with:
+          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          dns-name-label: intelliflow-reporter
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-reporter:latest
+          name: intelliflow-reporter
+          location: eastus
+
+      - name: Deploy Notifier to ACI
+        uses: azure/aci-deploy@v1
+        with:
+          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          dns-name-label: intelliflow-notifier
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-notifier:latest
+          name: intelliflow-notifier
+          location: eastus
+          environment-variables: |
+            SMTP_USER=${{ secrets.SMTP_USER }}
+            SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+            ALCHEMY_RPC_URL=${{ secrets.ALCHEMY_RPC_URL }}
+            ETH_PRIVATE_KEY=${{ secrets.ETH_PRIVATE_KEY }}
+            AUDIT_CONTRACT_ADDRESS=${{ secrets.AUDIT_CONTRACT_ADDRESS }}

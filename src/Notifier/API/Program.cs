@@ -1,15 +1,17 @@
-// Module 4 — Owner: Shamraiz
+using Notifier.API.Services;
+using DotNetEnv;
+
+Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<BlockchainService>();
+builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<BlockchainService>();
 
 var app = builder.Build();
-app.UseSwagger();
-app.UseSwaggerUI();
+
+app.UseRouting();
 app.MapControllers();
+
 app.Run();
