@@ -4,10 +4,10 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["Orchestrator.API/Orchestrator.API.csproj", "Orchestrator.API/"]
-RUN dotnet restore "Orchestrator.API/Orchestrator.API.csproj"
+COPY ["API/Orchestrator.API.csproj", "API/"]
+RUN dotnet restore "API/Orchestrator.API.csproj"
 COPY . .
-WORKDIR "/src/Orchestrator.API"
+WORKDIR "/src/API"
 RUN dotnet build "Orchestrator.API.csproj" -c Release -o /app/build
 
 FROM build AS publish
