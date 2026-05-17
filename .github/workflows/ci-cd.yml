@@ -64,64 +64,24 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service | lower }}:latest
 
-  # ── Deploy to Azure Container Instances ──────────────────────────
-  deploy-azure:
+  # ── Deploy to Render ──────────────────────────────────────────────
+  deploy-render:
     needs: docker-publish
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      - name: Deploy Orchestrator to Render
+        run: |
+          curl -X POST "${{ secrets.RENDER_ORCHESTRATOR_DEPLOY_HOOK }}"
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy ResearchSummarizer to Render
+        run: |
+          curl -X POST "${{ secrets.RENDER_RESEARCH_DEPLOY_HOOK }}"
 
-      - name: Deploy Orchestrator to ACI
-        uses: azure/aci-deploy@v1
-        with:
-          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          dns-name-label: intelliflow-orchestrator
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-orchestrator:latest
-          name: intelliflow-orchestrator
-          location: eastus
-          environment-variables: |
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            RESEARCH_SERVICE_URL=${{ secrets.RESEARCH_SERVICE_URL }}
-            REPORTER_SERVICE_URL=${{ secrets.REPORTER_SERVICE_URL }}
-            NOTIFIER_SERVICE_URL=${{ secrets.NOTIFIER_SERVICE_URL }}
+      - name: Deploy Reporter to Render
+        run: |
+          curl -X POST "${{ secrets.RENDER_REPORTER_DEPLOY_HOOK }}"
 
-      - name: Deploy ResearchSummarizer to ACI
-        uses: azure/aci-deploy@v1
-        with:
-          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          dns-name-label: intelliflow-researchsummarizer
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-researchsummarizer:latest
-          name: intelliflow-researchsummarizer
-          location: eastus
-          environment-variables: |
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-
-      - name: Deploy Reporter to ACI
-        uses: azure/aci-deploy@v1
-        with:
-          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          dns-name-label: intelliflow-reporter
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-reporter:latest
-          name: intelliflow-reporter
-          location: eastus
-
-      - name: Deploy Notifier to ACI
-        uses: azure/aci-deploy@v1
-        with:
-          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          dns-name-label: intelliflow-notifier
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-notifier:latest
-          name: intelliflow-notifier
-          location: eastus
-          environment-variables: |
-            SMTP_USER=${{ secrets.SMTP_USER }}
-            SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
-            ALCHEMY_RPC_URL=${{ secrets.ALCHEMY_RPC_URL }}
-            ETH_PRIVATE_KEY=${{ secrets.ETH_PRIVATE_KEY }}
-            AUDIT_CONTRACT_ADDRESS=${{ secrets.AUDIT_CONTRACT_ADDRESS }}
+      - name: Deploy Notifier to Render
+        run: |
+          curl -X POST "${{ secrets.RENDER_NOTIFIER_DEPLOY_HOOK }}"
