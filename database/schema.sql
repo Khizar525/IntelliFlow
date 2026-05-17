@@ -1,4 +1,4 @@
--- IntelliFlow — Azure SQL Database Schema
+-- IntelliFlow — Supabase (PostgreSQL) Database Schema
 -- Managed by: Hassan Asif (Module 3) via Entity Framework Core migrations
 -- Run this manually only for initial setup reference. EF Core handles actual migrations.
 
@@ -24,7 +24,7 @@ CREATE TABLE AgentLogs (
 CREATE TABLE Reports (
     Id            UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     TaskId        UNIQUEIDENTIFIER NOT NULL REFERENCES Tasks(Id) UNIQUE,
-    BlobUrl       NVARCHAR(2000)   NOT NULL,   -- Azure Blob Storage download URL
+    BlobUrl       NVARCHAR(2000)   NOT NULL,   -- Supabase Storage download URL
     OutputHash    NVARCHAR(64)     NOT NULL,   -- SHA-256 hex string (for blockchain)
     BlockchainTxHash NVARCHAR(66)  NULL,       -- Sepolia transaction hash (0x...)
     CreatedAt     DATETIME2        NOT NULL DEFAULT GETUTCDATE()

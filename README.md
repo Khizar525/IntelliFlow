@@ -21,9 +21,9 @@ User → REST API (Orchestrator)
      ↓                 ↓
  Research Agent    (parallel fan-out)
      ↓
- Summarizer Agent (Groq / Llama 3)
+ Summarizer Agent (OpenRouter / Llama 3)
      ↓
- Reporter Agent (Azure Blob Storage + Azure SQL)
+ Reporter Agent (Supabase Storage + PostgreSQL)
      ↓
  Notifier Agent → Email + Blockchain Hash (Sepolia)
 ```
@@ -56,8 +56,8 @@ See `.env.example` for all required variables. Never commit real secrets.
 
 ## Tech Stack
 - **Backend:** ASP.NET Core 8, Entity Framework Core
-- **LLM:** Groq API (Llama 3 70B)
-- **Cloud:** Azure (App Service / Container Instances, SQL, Blob Storage)
+- **LLM:** OpenRouter API (Llama 3 70B)
+- **Cloud:** Supabase (PostgreSQL, Storage) + Azure Container Instances
 - **Blockchain:** Ethereum Sepolia, Solidity, Nethereum, Alchemy
 - **DevOps:** Docker, GitHub Container Registry, GitHub Actions
 - **Auth:** JWT (built-in ASP.NET Core)

@@ -19,7 +19,7 @@ public class ResearchController : ControllerBase
 
     /// <summary>
     /// POST /api/research
-    /// Receives topic → fetches raw content → summarizes with Groq/Llama3
+    /// Receives topic → fetches raw content → summarizes with OpenRouter/Llama3
     /// Returns: { "summary": "..." }
     /// </summary>
     [HttpPost]

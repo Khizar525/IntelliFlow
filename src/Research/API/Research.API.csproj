@@ -6,6 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <!-- No extra packages needed — Groq API is called via plain HttpClient -->
+    <!-- No extra packages needed — OpenRouter API is called via plain HttpClient -->
   </ItemGroup>
 </Project>

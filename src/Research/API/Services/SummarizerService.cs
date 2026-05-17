@@ -1,9 +1,9 @@
 // ============================================================
-// Module 2: Summarizer Service — Groq API + Llama 3 70B
+// Module 2: Summarizer Service — OpenRouter API + Llama 3
 // Owner: Hamza Khaliq (02-131232-059)
 //
-// Groq API docs: https://console.groq.com/docs/openai
-// Free tier: 14,400 requests/day, no credit card needed
+// OpenRouter docs: https://openrouter.ai/docs
+// Free tier available via community models
 // ============================================================
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -18,18 +18,18 @@ public class SummarizerService
     public SummarizerService(HttpClient http)
     {
         _http  = http;
-        _model = Environment.GetEnvironmentVariable("GROQ_MODEL") ?? "llama3-70b-8192";
+        _model = Environment.GetEnvironmentVariable("OPENROUTER_MODEL") ?? "meta-llama/llama-3.1-70b-instruct:free";
 
-        var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY")
-            ?? throw new Exception("GROQ_API_KEY env var not set");
+        var apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY")
+            ?? throw new Exception("OPENROUTER_API_KEY env var not set");
 
-        _http.BaseAddress = new Uri("https://api.groq.com");
+        _http.BaseAddress = new Uri("https://openrouter.ai");
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", apiKey);
     }
 
     /// <summary>
-    /// Sends rawContent to Groq Llama3 and returns a structured summary.
+    /// Sends rawContent to OpenRouter Llama3 and returns a structured summary.
     /// </summary>
     public async Task<string> SummarizeAsync(string topic, string rawContent)
     {

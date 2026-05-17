@@ -1,5 +1,5 @@
 // ============================================================
-// Module 3: Reporter Agent — formats report + Azure Blob + SQL
+// Module 3: Reporter Agent — formats report + Supabase Storage + PostgreSQL
 // Owner: Hassan Asif (02-131232-113)
 // ============================================================
 using Microsoft.AspNetCore.Mvc;
