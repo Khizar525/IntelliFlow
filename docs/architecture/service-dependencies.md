@@ -12,42 +12,7 @@
 
 ## Dependency Graph
 
-```mermaid
-graph TD
-    subgraph "Internal Services"
-        FE[React Frontend]
-        ORC[Orchestrator API]
-        RS[ResearchSummarizer]
-        RP[Reporter]
-        NT[Notifier]
-    end
-
-    subgraph "External Services"
-        OR[OpenRouter API]
-        SB[Supabase]
-        SM[SMTP Server]
-        ETH[Ethereum Sepolia]
-    end
-
-    FE -->|HTTP :5173| ORC
-    ORC -->|HTTP :5001| RS
-    ORC -->|HTTP :5002| RP
-    ORC -->|HTTP :5003| NT
-    RS -->|HTTPS| OR
-    RP -->|HTTPS| SB
-    NT -->|SMTP| SM
-    NT -->|RPC| ETH
-
-    style FE fill:#61DAFB,stroke:#333
-    style ORC fill:#4CAF50,stroke:#333
-    style RS fill:#FF9800,stroke:#333
-    style RP fill:#9C27B0,stroke:#333
-    style NT fill:#F44336,stroke:#333
-    style OR fill:#00BCD4,stroke:#333
-    style SB fill:#3ECF8E,stroke:#333
-    style SM fill:#FF5722,stroke:#333
-    style ETH fill:#627EEA,stroke:#333
-```
+![Service Dependencies](images/service-dependencies.png)
 
 ## Port Mapping
 

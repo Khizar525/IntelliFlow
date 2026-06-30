@@ -8,49 +8,7 @@ IntelliFlow is a cloud-native multi-agent system that automates the knowledge-wo
 
 ## Architecture
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        UI[React Frontend<br/>Port 5173]
-    end
-
-    subgraph "API Gateway Layer"
-        ORC[Orchestrator API<br/>Port 5000]
-    end
-
-    subgraph "Agent Services Layer"
-        RS[Research Service<br/>Port 5001]
-        SS[Summarizer Service<br/>Port 5001]
-        RP[Reporter Service<br/>Port 5002]
-        NT[Notifier Service<br/>Port 5003]
-    end
-
-    subgraph "External Services"
-        OR[OpenRouter API<br/>LLM Provider]
-        SB[Supabase<br/>PostgreSQL + Storage]
-        SM[SMTP Server<br/>Email Delivery]
-        ETH[Ethereum Sepolia<br/>Blockchain]
-    end
-
-    subgraph "Observability"
-        JG[Jaeger<br/>Distributed Tracing]
-    end
-
-    UI -->|HTTP/REST| ORC
-    ORC -->|HTTP| RS
-    ORC -->|HTTP| RP
-    ORC -->|HTTP| NT
-    RS -->|HTTP| SS
-    RS -->|HTTPS| OR
-    RP -->|HTTPS| SB
-    NT -->|SMTP| SM
-    NT -->|RPC| ETH
-
-    ORC -.->|Traces| JG
-    RS -.->|Traces| JG
-    RP -.->|Traces| JG
-    NT -.->|Traces| JG
-```
+![System Architecture](docs/architecture/images/system-architecture.png)
 
 ## System Diagrams
 

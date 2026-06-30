@@ -6,38 +6,7 @@ IntelliFlow implements distributed observability using OpenTelemetry for tracing
 
 ## Architecture
 
-```mermaid
-graph TB
-    subgraph "Application Services"
-        ORC[Orchestrator]
-        RS[Research]
-        RP[Reporter]
-        NT[Notifier]
-    end
-
-    subgraph "OpenTelemetry SDK"
-        OT[OTel Tracer]
-        SP[Span Processor]
-        EX[OTLP Exporter]
-    end
-
-    subgraph "Jaeger Backend"
-        AG[Jaeger Agent<br/>Port 6831]
-        CO[Jaeger Collector<br/>Port 14268]
-        QP[Jaeger Query<br/>Port 16686]
-    end
-
-    ORC --> OT
-    RS --> OT
-    RP --> OT
-    NT --> OT
-
-    OT --> SP
-    SP --> EX
-    EX -->|OTLP| AG
-    AG --> CO
-    CO --> QP
-```
+![Observability Architecture](../architecture/images/observability-architecture.png)
 
 ## Components
 
