@@ -7,6 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 using Orchestrator.API.Middlewares;
+using Orchestrator.API.Extensions;
+using Polly;
+using Polly.Extensions.Http;
 
 // Load environment variables from .env file
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
@@ -16,7 +19,6 @@ if (File.Exists(envPath))
 }
 else
 {
-    // Try relative paths for Docker containers
     var relativePaths = new[] { "../../../.env", "../../../../.env" };
     foreach (var relativePath in relativePaths)
     {
@@ -29,7 +31,6 @@ else
     }
 }
 
-// Validate required environment variables
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
 if (string.IsNullOrEmpty(jwtSecret))
 {
@@ -37,6 +38,9 @@ if (string.IsNullOrEmpty(jwtSecret))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add OpenTelemetry
+builder.Services.AddOpenTelemetry(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -50,10 +54,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ValidateIssuer   = true,
-            ValidIssuer      = Environment.GetEnvironmentVariable("JWT_ISSUER"),
+            ValidateIssuer = true,
+            ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
             ValidateAudience = true,
-            ValidAudience    = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
+            ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
         };
     });
 
@@ -71,33 +75,60 @@ builder.Services.AddCors(options =>
     });
 });
 
-// HttpClients for calling sub-agents with resilience policies
-builder.Services.AddHttpClient("Research", c => 
+// Resilience policies
+var retryPolicy = HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .WaitAndRetryAsync(
+        retryCount: 3,
+        sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+        onRetry: (outcome, timespan, retryCount, context) =>
+        {
+            Console.WriteLine($"Retry {retryCount} for {context.OperationKey} after {timespan.TotalSeconds}s");
+        });
+
+var circuitBreakerPolicy = HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .CircuitBreakerAsync(
+        handledEventsAllowedBeforeBreaking: 5,
+        durationOfBreak: TimeSpan.FromSeconds(30),
+        onBreak: (result, breakDelay) =>
+        {
+            Console.WriteLine($"Circuit broken for {breakDelay.TotalSeconds}s");
+        },
+        onReset: () =>
+        {
+            Console.WriteLine("Circuit reset");
+        });
+
+var timeoutPolicy = Policy.TimeoutAsync(TimeSpan.FromSeconds(30));
+
+// HttpClients with resilience policies
+builder.Services.AddHttpClient("Research", c =>
 {
     c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("RESEARCH_SERVICE_URL")!);
     c.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
-    .OrResult(msg => !msg.IsSuccessStatusCode)
-    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+.AddPolicyHandler(retryPolicy)
+.AddPolicyHandler(circuitBreakerPolicy)
+.AddPolicyHandler(timeoutPolicy);
 
-builder.Services.AddHttpClient("Reporter", c => 
+builder.Services.AddHttpClient("Reporter", c =>
 {
     c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("REPORTER_SERVICE_URL")!);
     c.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
-    .OrResult(msg => !msg.IsSuccessStatusCode)
-    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+.AddPolicyHandler(retryPolicy)
+.AddPolicyHandler(circuitBreakerPolicy)
+.AddPolicyHandler(timeoutPolicy);
 
-builder.Services.AddHttpClient("Notifier", c => 
+builder.Services.AddHttpClient("Notifier", c =>
 {
     c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("NOTIFIER_SERVICE_URL")!);
     c.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
-    .OrResult(msg => !msg.IsSuccessStatusCode)
-    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+.AddPolicyHandler(retryPolicy)
+.AddPolicyHandler(circuitBreakerPolicy)
+.AddPolicyHandler(timeoutPolicy);
 
 builder.Services.AddScoped<OrchestratorService>();
 
@@ -114,6 +145,9 @@ app.UseRequestLogging();
 
 // Rate limiting
 app.UseRateLimiting();
+
+// OpenTelemetry
+app.UseOpenTelemetry();
 
 app.UseSwagger();
 app.UseSwaggerUI();
