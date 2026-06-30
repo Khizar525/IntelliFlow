@@ -16,9 +16,11 @@ public static class OpenTelemetryExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var serviceName = configuration.GetValue<string>("OpenTelemetry:ServiceName") ?? "Orchestrator";
+        var serviceName = configuration.GetValue<string>("OpenTelemetry:ServiceName") ?? Environment.GetEnvironmentVariable("OTEL_SERVICE_NAME") ?? "Orchestrator";
         var serviceVersion = configuration.GetValue<string>("OpenTelemetry:ServiceVersion") ?? "1.0.0";
-        var jaegerEndpoint = configuration.GetValue<string>("OpenTelemetry:JaegerEndpoint") ?? "http://localhost:14268/api/traces";
+        var otlpEndpoint = configuration.GetValue<string>("OpenTelemetry:OtlpEndpoint")
+            ?? Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")
+            ?? "http://localhost:4317";
 
         services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
@@ -47,17 +49,14 @@ public static class OpenTelemetryExtensions
                     options.RecordException = true;
                 })
                 .AddSource("IntelliFlow.Orchestrator")
-                .AddJaegerExporter(options =>
+                .AddOtlpExporter(options =>
                 {
-                    options.AgentHost = configuration.GetValue<string>("OpenTelemetry:JaegerHost") ?? "localhost";
-                    options.AgentPort = configuration.GetValue<int>("OpenTelemetry:JaegerPort") ?? 6831;
-                    options.ExportProcessorType = OpenTelemetry.ExportProcessorType.Batch;
+                    options.Endpoint = new Uri(otlpEndpoint);
                 }))
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
-                .AddMeter("IntelliFlow.Orchestrator")
-                .AddPrometheusExporter());
+                .AddMeter("IntelliFlow.Orchestrator"));
 
         return services;
     }
@@ -67,8 +66,7 @@ public static class OpenTelemetryExtensions
     /// </summary>
     public static IApplicationBuilder UseOpenTelemetry(this IApplicationBuilder app)
     {
-        // Use Prometheus exporter endpoint
-        app.UsePrometheusScraping();
+        // OpenTelemetry is configured in services
         return app;
     }
 }

@@ -53,7 +53,7 @@ public class ResilienceTests
         int attemptCount = 0;
 
         // Act & Assert
-        var act = () => ExecuteWithRetry(() =>
+        var act = () => ExecuteWithRetry<string>(() =>
         {
             attemptCount++;
             throw new HttpRequestException("Persistent error");
@@ -86,7 +86,8 @@ public class ResilienceTests
         // Act
         for (int i = 0; i < 3; i++)
         {
-            circuitBreaker.Execute(() => throw new Exception("Error"));
+            try { circuitBreaker.Execute<string>(() => throw new Exception("Error")); }
+            catch { /* Expected - recording failure */ }
         }
 
         // Assert
@@ -100,7 +101,8 @@ public class ResilienceTests
         var circuitBreaker = new TestCircuitBreaker(failureThreshold: 3);
         for (int i = 0; i < 3; i++)
         {
-            circuitBreaker.Execute(() => throw new Exception("Error"));
+            try { circuitBreaker.Execute<string>(() => throw new Exception("Error")); }
+            catch { /* Expected - recording failure */ }
         }
 
         // Act & Assert
@@ -119,7 +121,8 @@ public class ResilienceTests
         
         for (int i = 0; i < 3; i++)
         {
-            circuitBreaker.Execute(() => throw new Exception("Error"));
+            try { circuitBreaker.Execute<string>(() => throw new Exception("Error")); }
+            catch { /* Expected - recording failure */ }
         }
 
         // Act

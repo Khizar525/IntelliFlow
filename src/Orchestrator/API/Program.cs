@@ -100,8 +100,6 @@ var circuitBreakerPolicy = HttpPolicyExtensions
             Console.WriteLine("Circuit reset");
         });
 
-var timeoutPolicy = Policy.TimeoutAsync(TimeSpan.FromSeconds(30));
-
 // HttpClients with resilience policies
 builder.Services.AddHttpClient("Research", c =>
 {
@@ -109,8 +107,7 @@ builder.Services.AddHttpClient("Research", c =>
     c.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddPolicyHandler(retryPolicy)
-.AddPolicyHandler(circuitBreakerPolicy)
-.AddPolicyHandler(timeoutPolicy);
+.AddPolicyHandler(circuitBreakerPolicy);
 
 builder.Services.AddHttpClient("Reporter", c =>
 {
@@ -118,8 +115,7 @@ builder.Services.AddHttpClient("Reporter", c =>
     c.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddPolicyHandler(retryPolicy)
-.AddPolicyHandler(circuitBreakerPolicy)
-.AddPolicyHandler(timeoutPolicy);
+.AddPolicyHandler(circuitBreakerPolicy);
 
 builder.Services.AddHttpClient("Notifier", c =>
 {
@@ -127,8 +123,7 @@ builder.Services.AddHttpClient("Notifier", c =>
     c.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddPolicyHandler(retryPolicy)
-.AddPolicyHandler(circuitBreakerPolicy)
-.AddPolicyHandler(timeoutPolicy);
+.AddPolicyHandler(circuitBreakerPolicy);
 
 builder.Services.AddScoped<OrchestratorService>();
 

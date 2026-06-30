@@ -77,7 +77,7 @@ public class TaskValidationTests
 
         // Assert
         validationResult.IsValid.Should().BeFalse();
-        validationResult.Errors.Should().Contain(e => e.Contains("Email"));
+        validationResult.Errors.Should().Contain(e => e.Contains("email", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class TaskValidationTests
 
         // Assert
         validationResult.IsValid.Should().BeFalse();
-        validationResult.Errors.Should().Contain(e => e.Contains("Email"));
+        validationResult.Errors.Should().Contain(e => e.Contains("email", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

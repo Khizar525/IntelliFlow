@@ -1,3 +1,5 @@
+using Orchestrator.API.Models;
+
 namespace Orchestrator.API.Strategies;
 
 /// <summary>
