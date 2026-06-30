@@ -1,14 +1,28 @@
+// ============================================================
+// Module 4: Notifier Service
+// Owner: Shamraiz
+// ============================================================
 using Notifier.API.Services;
+using DotNetEnv;
 
-var envFile = Path.Combine(Directory.GetCurrentDirectory(), "../../../.env");
-if (File.Exists(envFile))
+// Load environment variables from .env file
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
 {
-    foreach (var line in File.ReadAllLines(envFile))
+    Env.Load(envPath);
+}
+else
+{
+    // Try relative paths for Docker containers
+    var relativePaths = new[] { "../../../.env", "../../../../.env" };
+    foreach (var relativePath in relativePaths)
     {
-        if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
-        var parts = line.Split('=', 2);
-        if (parts.Length == 2)
-            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+        if (File.Exists(fullPath))
+        {
+            Env.Load(fullPath);
+            break;
+        }
     }
 }
 
@@ -18,9 +32,13 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<EmailService>();
 builder.Services.AddSingleton<BlockchainService>();
 
+// Health checks
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseRouting();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

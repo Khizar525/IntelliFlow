@@ -35,9 +35,36 @@ jobs:
         run: dotnet test src/${{ matrix.service }}/${{ matrix.service }}.API/${{ matrix.service }}.API.csproj --no-build --verbosity normal
         continue-on-error: true
 
+  # ── Frontend Build ──────────────────────────────────────────────
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
   # ── Docker Build & Push (main branch only) ───────────────────────
   docker-publish:
-    needs: build-and-test
+    needs: [build-and-test, frontend-build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     strategy:
@@ -64,24 +91,41 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service | lower }}:latest
 
-  # ── Deploy to Render ──────────────────────────────────────────────
-  deploy-render:
-    needs: docker-publish
+  # ── Security Scan ──────────────────────────────────────────────
+  security-scan:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy Orchestrator to Render
-        run: |
-          curl -X POST "${{ secrets.RENDER_ORCHESTRATOR_DEPLOY_HOOK }}"
+      - uses: actions/checkout@v4
 
-      - name: Deploy ResearchSummarizer to Render
-        run: |
-          curl -X POST "${{ secrets.RENDER_RESEARCH_DEPLOY_HOOK }}"
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
 
-      - name: Deploy Reporter to Render
-        run: |
-          curl -X POST "${{ secrets.RENDER_REPORTER_DEPLOY_HOOK }}"
+  # ── Code Quality ──────────────────────────────────────────────
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Deploy Notifier to Render
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Check formatting
         run: |
-          curl -X POST "${{ secrets.RENDER_NOTIFIER_DEPLOY_HOOK }}"
+          dotnet format --verify-no-changes --verbosity diagnostic || true
+        continue-on-error: true
+
+      - name: Run security analysis
+        run: |
+          echo "Running security analysis..."
+          # Check for common security issues in code
+          grep -r "password" --include="*.cs" . | grep -v "HashedPassword" | grep -v "//" || true
+          echo "Security analysis completed"

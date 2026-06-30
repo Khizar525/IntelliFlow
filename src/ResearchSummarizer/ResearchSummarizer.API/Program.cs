@@ -1,25 +1,31 @@
-Console.WriteLine($"DEBUG CWD: {Directory.GetCurrentDirectory()}");
+// ============================================================
+// Module 2: Research & Summarizer Service
+// Owner: Hamza Khaliq
+// ============================================================
+using DotNetEnv;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Load .env file — try CWD first, then project-relative paths
-var candidates = new[] { ".env", "../../../.env", "../../../../.env" }
-    .Select(p => Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), p)))
-    .ToArray();
-Console.WriteLine($"DEBUG .env candidates: {string.Join(", ", candidates)}");
-var envFile = candidates.FirstOrDefault(File.Exists);
-Console.WriteLine($"DEBUG .env found: {envFile ?? "NULL"}");
-if (envFile != null)
+// Load environment variables from .env file
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
 {
-    foreach (var line in File.ReadAllLines(envFile))
+    Env.Load(envPath);
+}
+else
+{
+    // Try relative paths for Docker containers
+    var relativePaths = new[] { "../../../.env", "../../../../.env" };
+    foreach (var relativePath in relativePaths)
     {
-        if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
-        var parts = line.Split('=', 2);
-        if (parts.Length == 2)
-            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+        if (File.Exists(fullPath))
+        {
+            Env.Load(fullPath);
+            break;
+        }
     }
 }
-Console.WriteLine($"DEBUG OPENROUTER_API_KEY after load: {(Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") ?? "NULL")}");
+
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -29,6 +35,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient<ResearchSummarizer.API.Services.ResearchService>();
 builder.Services.AddHttpClient<ResearchSummarizer.API.Services.SummarizerService>();
 
+// Health checks
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -36,5 +45,6 @@ app.UseSwaggerUI();
 
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

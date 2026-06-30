@@ -7,20 +7,32 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 
-// Explicitly specify the path to the .env file
-Env.Load("D:\\cloud_project\\IntelliFlow\\.env");
-
-// Debug statement to verify JWT_SECRET
-Console.WriteLine($"JWT_SECRET: {Environment.GetEnvironmentVariable("JWT_SECRET")}");
-
 // Load environment variables from .env file
-Env.Load();
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
+{
+    Env.Load(envPath);
+}
+else
+{
+    // Try relative paths for Docker containers
+    var relativePaths = new[] { "../../../.env", "../../../../.env" };
+    foreach (var relativePath in relativePaths)
+    {
+        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+        if (File.Exists(fullPath))
+        {
+            Env.Load(fullPath);
+            break;
+        }
+    }
+}
 
-// Access JWT_SECRET
+// Validate required environment variables
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
 if (string.IsNullOrEmpty(jwtSecret))
 {
-    throw new Exception("JWT_SECRET env var not set");
+    throw new InvalidOperationException("JWT_SECRET environment variable is not set.");
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +65,9 @@ builder.Services.AddHttpClient("Notifier",  c => c.BaseAddress = new Uri(Environ
 
 builder.Services.AddScoped<OrchestratorService>();
 
+// Health checks
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -62,4 +77,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
+
 app.Run();
