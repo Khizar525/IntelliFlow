@@ -11,6 +11,7 @@ obj/
 *.env.local
 appsettings.Development.json
 appsettings.Production.json
+**/appsettings.json
 
 # Docker
 docker-compose.override.yml
@@ -36,4 +37,13 @@ Thumbs.db
 *.key
 *.keystore
 wallet.json
-".vscode/" 
+
+# IDE
+.vscode/
+.idea/
+
+# Test files
+*.http
+
+# Launch settings (local development only)
+**/Properties/launchSettings.json 

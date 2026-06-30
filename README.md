@@ -222,8 +222,11 @@ docker compose up --build -d
 | Document | Description |
 |----------|-------------|
 | [Architecture](docs/architecture/README.md) | System diagrams and design |
+| [Sequence Diagrams](docs/architecture/sequence-diagrams.md) | Pipeline flow visualization |
+| [Service Dependencies](docs/architecture/service-dependencies.md) | Service dependency matrix |
 | [Observability](docs/observability/README.md) | Tracing and monitoring |
 | [Resilience](docs/resilience/README.md) | Fault tolerance patterns |
+| [Testing](docs/testing/README.md) | Unit tests and coverage |
 | [Performance](docs/performance/README.md) | Metrics and benchmarks |
 | [Engineering](docs/engineering/README.md) | Challenges and solutions |
 | [Enhancement Log](ENHANCEMENT_LOG.md) | Post-evaluation improvements |
