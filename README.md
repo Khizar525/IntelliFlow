@@ -69,7 +69,7 @@ docker compose up -d
 
 ## Resilience Patterns
 
-IntelliFlow implements production-inspired resilience patterns using Polly.
+IntelliFlow implements production-oriented resilience patterns using Polly.
 
 ### Patterns
 | Pattern | Purpose | Configuration |
@@ -85,6 +85,20 @@ Request → Timeout (30s) → Retry (3x) → Circuit Breaker → Service
 
 [Learn more →](docs/resilience/README.md)
 
+## Agentic Characteristics
+
+IntelliFlow implements several characteristics of workflow-oriented agentic systems:
+
+- **Specialized agents with isolated responsibilities** — each service (Research, Summarize, Report, Notify, Blockchain) owns a single bounded context
+- **Centralized orchestration** — the Orchestrator API Gateway coordinates execution order, context propagation, and error handling
+- **Shared execution context** — a `PipelineContext` model flows through all services, accumulating results and state at each stage
+- **Strategy-based decision making** — the Strategy pattern selects Sequential, Parallel, or Conditional execution based on task parameters
+- **Autonomous multi-stage execution** — once triggered, the pipeline completes all stages without further human input
+- **Tool usage through external services** — each agent calls specialized APIs (LLM, email, database) to accomplish its work
+- **Failure recovery and fallback behaviors** — retry logic, circuit breakers, and timeout policies ensure the pipeline degrades gracefully
+
+While IntelliFlow is not intended to be a fully autonomous agent framework, it demonstrates practical agent orchestration patterns commonly used in production AI systems.
+
 ## Testing
 
 ### Test Structure
@@ -97,15 +111,15 @@ tests/
 │   └── ResilienceTests.cs
 ```
 
-### Test Coverage
-| Category | Tests | Coverage |
-|----------|-------|----------|
+### Test Areas
+| Category | Tests | What It Covers |
+|----------|-------|----------------|
 | Authentication | 7 | JWT validation, login logic |
 | Task Validation | 7 | Input validation, error handling |
-| Orchestrator Logic | 9 | Pipeline status, topic classification |
-| Resilience | 8 | Retry, circuit breaker, timeout |
+| Orchestrator Logic | 10 | Pipeline status, topic classification, model selection |
+| Resilience | 9 | Retry, circuit breaker, timeout |
 
-**Total: 31 tests**
+**Total: 33 tests**
 
 ### Running Tests
 ```bash
