@@ -31,6 +31,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowOrchestrator", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Register services with HttpClient
 builder.Services.AddHttpClient<ResearchSummarizer.API.Services.ResearchService>();
 builder.Services.AddHttpClient<ResearchSummarizer.API.Services.SummarizerService>();
@@ -42,6 +53,8 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseCors("AllowOrchestrator");
 
 app.UseAuthorization();
 app.MapControllers();

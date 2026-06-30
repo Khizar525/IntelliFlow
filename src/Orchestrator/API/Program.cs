@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
+using Orchestrator.API.Middlewares;
 
 // Load environment variables from .env file
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
@@ -58,10 +59,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// HttpClients for calling sub-agents
-builder.Services.AddHttpClient("Research",  c => c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("RESEARCH_SERVICE_URL")!));
-builder.Services.AddHttpClient("Reporter",  c => c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("REPORTER_SERVICE_URL")!));
-builder.Services.AddHttpClient("Notifier",  c => c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("NOTIFIER_SERVICE_URL")!));
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// HttpClients for calling sub-agents with resilience policies
+builder.Services.AddHttpClient("Research", c => 
+{
+    c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("RESEARCH_SERVICE_URL")!);
+    c.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
+    .OrResult(msg => !msg.IsSuccessStatusCode)
+    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+
+builder.Services.AddHttpClient("Reporter", c => 
+{
+    c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("REPORTER_SERVICE_URL")!);
+    c.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
+    .OrResult(msg => !msg.IsSuccessStatusCode)
+    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+
+builder.Services.AddHttpClient("Notifier", c => 
+{
+    c.BaseAddress = new Uri(Environment.GetEnvironmentVariable("NOTIFIER_SERVICE_URL")!);
+    c.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
+    .OrResult(msg => !msg.IsSuccessStatusCode)
+    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
 builder.Services.AddScoped<OrchestratorService>();
 
@@ -70,8 +106,20 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+// Global exception handler (must be first)
+app.UseGlobalExceptionHandler();
+
+// Request logging
+app.UseRequestLogging();
+
+// Rate limiting
+app.UseRateLimiting();
+
 app.UseSwagger();
 app.UseSwaggerUI();
+
+// CORS (must be after UseRouting, before UseAuthorization)
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -29,6 +29,18 @@ else
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowOrchestrator", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddSingleton<EmailService>();
 builder.Services.AddSingleton<BlockchainService>();
 
@@ -38,6 +50,7 @@ builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 app.UseRouting();
+app.UseCors("AllowOrchestrator");
 app.MapControllers();
 app.MapHealthChecks("/health");
 

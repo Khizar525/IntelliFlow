@@ -50,6 +50,13 @@ IntelliFlow addresses this challenge by creating an automated pipeline that:
 - **Environment Management**: Secure configuration with environment variables
 - **Health Checks**: Service health monitoring and automatic restarts
 
+### Security & Resilience Enhancements
+- **Rate Limiting**: IP-based rate limiting to prevent abuse
+- **Global Exception Handler**: Consistent error responses across all services
+- **Request Logging**: Correlation IDs and request duration tracking
+- **CORS Configuration**: Proper cross-origin resource sharing policies
+- **Polly Retry Policies**: Automatic retry with exponential backoff for external calls
+
 ## Technology Stack
 
 ### Frontend
@@ -62,6 +69,7 @@ IntelliFlow addresses this challenge by creating an automated pipeline that:
 - **ASP.NET Core 8** for high-performance REST APIs
 - **Entity Framework Core** for database operations
 - **HTTP-based microservices** for inter-service communication
+- **Polly** for resilience and transient fault handling
 
 ### AI & LLM Integration
 - **OpenRouter API** for LLM access (Gemma 4, Llama 3.2, Dolphin Mistral)
@@ -95,9 +103,26 @@ IntelliFlow/
 │   └── package.json
 ├── src/
 │   ├── Orchestrator/          # Module 1 — API Gateway, pipeline orchestration
+│   │   ├── API/
+│   │   │   ├── Controllers/   # AuthController, TasksController
+│   │   │   ├── Middlewares/   # RateLimiting, GlobalException, RequestLogging
+│   │   │   └── Services/      # OrchestratorService
+│   │   └── Dockerfile
 │   ├── ResearchSummarizer/    # Module 2 — Web scraping, LLM summarization
+│   │   ├── ResearchSummarizer.API/
+│   │   │   ├── Controllers/   # ResearchController
+│   │   │   └── Services/      # ResearchService, SummarizerService
+│   │   └── Dockerfile
 │   ├── Reporter/              # Module 3 — PDF generation, Supabase storage
+│   │   ├── API/
+│   │   │   ├── Controllers/   # ReportController
+│   │   │   └── Services/      # ReportService
+│   │   └── Dockerfile
 │   └── Notifier/              # Module 4 — SMTP email, blockchain logging
+│       ├── API/
+│       │   ├── Controllers/   # NotifyController
+│       │   └── Services/      # EmailService, BlockchainService
+│       └── Dockerfile
 ├── contracts/                 # Solidity smart contract (AuditLog.sol)
 ├── database/                  # SQL schema
 ├── docs/                      # Documentation
@@ -154,6 +179,38 @@ Frontend Dashboard: `http://localhost:5173`
 | 3 | Report | Reporter | 5002 | Generates PDF report, stores in Supabase |
 | 4 | Notify | Notifier | 5003 | Sends email via SMTP with report link |
 | 5 | Blockchain | Notifier | 5003 | Logs SHA-256 hash on Ethereum Sepolia testnet |
+
+## API Endpoints
+
+### Orchestrator (Port 5000)
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/login` | Get JWT token | No |
+| GET | `/api/auth/health` | Auth service health | No |
+| POST | `/api/tasks` | Submit new task | Yes |
+| GET | `/api/tasks/health` | Tasks service health | No |
+| GET | `/health` | Overall health check | No |
+
+### ResearchSummarizer (Port 5001)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/research` | Research and summarize topic |
+| GET | `/api/research/health` | Service health |
+| GET | `/health` | Overall health check |
+
+### Reporter (Port 5002)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/report` | Generate and store report |
+| GET | `/api/report/health` | Service health |
+| GET | `/health` | Overall health check |
+
+### Notifier (Port 5003)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/notify` | Send email and log to blockchain |
+| GET | `/api/notify/health` | Service health |
+| GET | `/health` | Overall health check |
 
 ## Environment Variables
 

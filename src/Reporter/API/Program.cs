@@ -32,6 +32,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowOrchestrator", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddDbContext<IntelliFlowDbContext>(options =>
     options.UseNpgsql(
         Environment.GetEnvironmentVariable("SUPABASE_DB_CONNECTION")));
@@ -44,6 +55,7 @@ builder.Services.AddHealthChecks();
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseCors("AllowOrchestrator");
 app.MapControllers();
 app.MapHealthChecks("/health");
 app.Run();
