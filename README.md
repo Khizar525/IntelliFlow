@@ -6,6 +6,12 @@
 
 IntelliFlow is a cloud-native multi-agent system that automates the knowledge-work pipeline. Users submit research topics through a modern React dashboard, and five specialized agents execute in sequence: Research → Summarize → Report → Notify → Blockchain. The system delivers results via email with an on-chain audit trail, demonstrating practical application of microservices architecture, LLM integration, and blockchain technology.
 
+## Demo
+
+![IntelliFlow Demo — Jaeger distributed tracing showing orchestrator service spans](docs/images/intelliflow-demo.gif)
+
+*Jaeger UI showing real-time distributed tracing across the orchestrator service — traces flow from API gateway through each pipeline stage with full span details, timing, and service metadata.*
+
 ## Architecture
 
 ![System Architecture](docs/architecture/images/system-architecture.png)
